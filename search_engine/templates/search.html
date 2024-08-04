@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <h1 class="text-center mb-4">Поиск по штрихкоду</h1>
+            <form method="post" class="card card-body">
+                {% csrf_token %}
+                <div class="mb-3">
+                    {{ form.barcode.label_tag }}
+                    {{ form.barcode }}
+                </div>
+                <button type="submit" class="btn btn-primary w-100">Поиск</button>
+            </form>
+            <h2 class="mt-4 mb-3">Результаты:</h2>
+            {% if results %}
+                <div class="list-group">
+                    <div class="list-group-item">
+                        {% for key, value in results.items %}
+                            <h5 class="mb-1">{{ key }}: {{ value|default:"Не указано" }}</h5>
+                        {% endfor %}
+                    </div>
+                </div>
+            {% else %}
+                <p class="text-center">Введите штрихкод и нажмите поиск для получения результатов.</p>
+            {% endif %}
+            <form method="post" action="{% url 'finish_search' %}" class="mt-4">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-secondary w-100">Завершить и перезапустить</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

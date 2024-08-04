@@ -1,0 +1,16 @@
+version: '3.1'
+
+services:
+  search:
+    build: ./
+    volumes:
+      - static_volume:/home/www/staticfiles
+    env_file:
+      - .env
+    ports:
+      - "80:8000"
+    restart: always
+volumes:
+  static_volume:
+    driver: local  # Используем локальный драйвер для тома
+
