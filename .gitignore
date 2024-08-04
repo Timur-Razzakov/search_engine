@@ -1,8 +1,19 @@
-../.idea/
-../venv
-*.env
-/__pycache__/
-*.pyc
-../configurations
-templates_tag.txt
-.pytest_cache
+# byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+
+# tests and coverage
+*.pytest_cache
+.coverage
+.vscode
+# database & logs
+*.log
+
+# venv
+venv
+
+staticfiles/*
+
+.env
+.idea/
+/logs/
