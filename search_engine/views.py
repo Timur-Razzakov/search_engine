@@ -1,3 +1,4 @@
+import json
 import os
 
 from django.shortcuts import render, redirect
@@ -11,13 +12,20 @@ def upload_files(request):
         form = FileUploadForm(request.POST, request.FILES)
         if form.is_valid():
             files = request.FILES.getlist('files')
+            file_names = [f.name for f in files]  # Получаем имена файлов
+
             for f in files:
                 handle_uploaded_file(f)
-            return redirect('search_product_by_files')
+
+            response = redirect('search_product_by_files')
+            response.set_cookie('file_names', json.dumps(file_names))
+
+            return response
     else:
         form = FileUploadForm()
 
     return render(request, 'upload.html', {'form': form})
+
 
 def search_product_by_files(request):
     if request.method == 'POST':
@@ -25,18 +33,18 @@ def search_product_by_files(request):
         if form.is_valid():
             barcode = form.cleaned_data['barcode']
             results = {}
-            uploads_dir = 'uploads'
-            files = os.listdir(uploads_dir)
+            # Получаем список имен файлов из cookie
+            file_names = json.loads(request.COOKIES.get('file_names', '[]'))
 
-            if not files:
+            if not file_names:
                 return render(request, 'search.html', {'form': form, 'error': 'Нет загруженных файлов.'})
 
+            uploads_dir = 'uploads'
             pdf_searched = False  # Флаг для поиска в PDF
             xlsx_searched = False  # Флаг для поиска в Excel
 
-            for file_name in files:
+            for file_name in file_names:
                 file_path = os.path.join(uploads_dir, file_name)
-                product_info = None
 
                 # Поиск в PDF только если не найдено ранее
                 if not pdf_searched and file_name.endswith('.pdf'):
@@ -68,6 +76,18 @@ def search_product_by_files(request):
     form = SearchForm()
     return render(request, 'search.html', {'form': form})
 
+
 def finish_search(request):
-    delete_all_files()
-    return redirect('upload_files')
+    # Получаем имена файлов из cookie
+    file_names = json.loads(request.COOKIES.get('file_names', '[]'))
+
+    # Удаляем все файлы
+    delete_all_files(file_names)
+
+    # Перенаправляем пользователя
+    response = redirect('upload_files')
+
+    # Удаляем куки, установив его значение в пустую строку и срок действия на прошлую дату
+    response.delete_cookie('file_names')
+
+    return response

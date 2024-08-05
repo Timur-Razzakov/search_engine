@@ -70,15 +70,14 @@ def delete_file(file_path):
     return False
 
 
-def delete_all_files():
+def delete_all_files(file_names: list[str]):
     """ Удаление всех файлов в директории uploads """
     upload_dir = os.path.join(settings.BASE_DIR, 'uploads')
-    for filename in os.listdir(upload_dir):
+    for filename in file_names:
         file_path = os.path.join(upload_dir, filename)
         if os.path.isfile(file_path):
             os.remove(file_path)
             print(f"Удален файл: {filename}")
-
 
 
 def extract_info_from_excel(file_path, barcode):
@@ -88,17 +87,19 @@ def extract_info_from_excel(file_path, barcode):
     except Exception as e:
         print(f"Ошибка при загрузке файла: {e}")
         return None
-    df['ШК'] = df['ШК'].astype(str)
     # Определение необходимых столбцов
-    required_columns = ['ШК', 'п/п', 'Наименование товара', 'ФИО получателя физ. лица', 'Номер паспорта', 'Пинфл', 'Контактный номер']
+    required_columns = ['ШК', 'п/п', 'Наименование товара', 'ФИО получателя физ. лица', 'Номер паспорта', 'Пинфл',
+                        'Контактный номер']
 
     # Проверяем наличие всех необходимых столбцов в DataFrame
     missing_columns = [col for col in required_columns if col not in df.columns]
     if missing_columns:
         print(f"Отсутствующие столбцы: {', '.join(missing_columns)}")
         return None
+
+    df['ШК'] = df['ШК'].astype(str)
     # Поиск всех строк с заданным ШК
-    matched_rows = df[df['ШК'] == barcode]
+    matched_rows = df[df['ШК'].str.contains(barcode)]
 
     if matched_rows.empty:
         print("ШК не найден в файле.")
