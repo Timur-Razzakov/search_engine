@@ -10,8 +10,16 @@ from .widgets import MultipleFileInput
 
 def extract_info_from_pdf(pdf_path, doc_number):
     headers = None  # Переменная для хранения заголовков таблицы
+    ec_number = None
     with pdfplumber.open(pdf_path) as pdf:
         for page_number, page in enumerate(pdf.pages):
+            text = page.extract_text()
+            if text:
+                lines = text.split('\n')
+                for line in lines:
+                    if 'EC' in line:
+                        ec_number = line.split()[-1]  # Предположим, что номер EC находится в конце строки, содержащей 'EC'
+
             table = page.extract_table()
             if table:
                 if headers is None:
@@ -29,10 +37,11 @@ def extract_info_from_pdf(pdf_path, doc_number):
                         for row in table[start_row:]:
                             if row[doc_index] == doc_number:
                                 # Собираем данные по найденному документу
-                                required_fields = ["Адрес получателя", "Вес брутто (кг)", "Стоимость товара"]
+                                required_fields = ["№", "Адрес получателя", "Вес брутто (кг)", "Стоимость товара"]
                                 if all(field in data_index for field in required_fields):
                                     row_data = {field: row[data_index[field]].replace('\n', ' ').strip() for
                                                 field in required_fields}
+                                    row_data['EC Number'] = ec_number
                                     return row_data
     return None
 
